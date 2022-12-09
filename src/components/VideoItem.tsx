@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useVideoDownloader } from '../shared/contexts/video-downloader.context';
+import Hls from 'hls.js';
 
 const VideoItem = ({ data }) => {
-  const originalVideo = useRef(null);
+  const originalVideo = useRef<any>(null);
   const resultVideo = useRef(null);
   const [videoUrl, setVideoUrl] = useState('');
+  const [originalUrl, setOriginalUrl] = useState('');
   const [isDownloadStarted, setDownloadStarted] = useState(false);
   const [paused, setPaused] = useState(false);
-  const { myIDB, getDBState, getVideoFromIDB, onDownload }: any = useVideoDownloader();
+  const {
+    downloaders,
+    myIDB,
+    isFfmpegLoaded,
+    getVideoFromIDB,
+    onDownload
+  }: any = useVideoDownloader();
 
   useEffect(() => {
     if (myIDB) {
@@ -15,11 +23,27 @@ const VideoItem = ({ data }) => {
     }
   }, [myIDB]);
 
+  useEffect(() => {
+    if (downloaders[data.id]?.downloadState === 'finished') {
+      // Load video at offline mode
+    }
+  }, downloaders[data.id]);
+
   const getLocalData = async () => {
     const result = await getVideoFromIDB(data?.id);
     if (result) {
-      setVideoUrl(result);
+      const blob = new Blob([result?.data], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      setVideoUrl(url);
+    } else {
+      loadOriginUrl();
     }
+  };
+
+  const loadOriginUrl = () => {
+    const hls = new Hls();
+    hls.loadSource(data.hlsUrl);
+    hls.attachMedia(originalVideo?.current);
   };
 
   const toggleDownload = () => {
@@ -34,10 +58,16 @@ const VideoItem = ({ data }) => {
   return (
     <div className="video-card">
       <div className="video-box">
-        <video ref={ originalVideo } src={ data.hlsUrl } crossOrigin="anonymous" controls />
         {
-          !!videoUrl &&
-          <video ref={ resultVideo } src={ videoUrl } controls />
+          videoUrl ?
+            <>
+              <p>Offline Video</p>
+              <video ref={ resultVideo } src={ videoUrl } controls />
+            </> :
+            <>
+              <p>Original Video</p>
+              <video ref={ originalVideo } src={ originalUrl } controls />
+            </>
         }
       </div>
       {
@@ -47,7 +77,7 @@ const VideoItem = ({ data }) => {
               { paused ? 'Resume' : 'Pause' }
             </button>
           </> :
-          <button className="btn btn-download" onClick={ handleDownload }>
+          <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
             Download
           </button>
       }

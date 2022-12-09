@@ -2,8 +2,6 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { openDB } from 'idb';
 import { createFFmpeg } from '@ffmpeg/ffmpeg';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { Parser } from 'm3u8-parser';
 
 import {
@@ -14,17 +12,13 @@ import {
 } from '../services/common.service';
 import { VideoDownloaderContext } from '../contexts/video-downloader.context';
 
-const ffmpeg = createFFmpeg({
-  corePath: '/ffmpeg_core_dist/ffmpeg-core.js',
-  log: true
-});
+const ffmpeg = createFFmpeg({ log: true });
 
 const VideoDownloadProvider = (props) => {
   const db = useRef<any>(null);
-  // const ffmpeg = useRef<any>(null);
   const downloaders = useRef<any>({});
   const [myIDB, setMyIDB] = useState();
-  // const [downloaders, setDownloaders] = useState({});
+  const [isFfmpegLoaded, setFfmpegLoaded] = useState(false);
 
   useEffect(() => {
     initVideoDownloader();
@@ -37,6 +31,7 @@ const VideoDownloadProvider = (props) => {
 
   const initFfmpeg = async () => {
     await ffmpeg?.load();
+    setFfmpegLoaded(true);
   };
 
   const createDB = async () => {
@@ -149,7 +144,7 @@ const VideoDownloadProvider = (props) => {
   };
 
   const onDownload = async (video) => {
-    if (!ffmpeg) {
+    if (!isFfmpegLoaded) {
       return;
     }
 
@@ -223,21 +218,17 @@ const VideoDownloadProvider = (props) => {
   };
 
   const getVideoFromIDB = async (id: string | number) => {
-    const tx = await db?.current?.transaction(['media'], 'readonly');
-    const store = tx?.objectStore('media');
-    console.log(1111, store);
+    const transaction = await db?.current?.transaction(['media'], 'readonly');
+    const store = transaction?.objectStore('media');
     const video = await store?.get(id);
-    const blob = new Blob([video?.data], { type: 'video/mp4' });
-    return URL.createObjectURL(blob);
-    // setVideoUrl(URL.createObjectURL(blob));
+    return video;
   };
 
   const getAllVideosFromIDB = async () => {
     const tx = await db?.current?.transaction('media', 'readonly');
     const store = tx?.objectStore('media');
-    const values = await store?.getAll();
-    return values;
-    // setVideoUrl(URL.createObjectURL(blob));
+    const videos = await store?.getAll();
+    return videos;
   };
 
   const getDownloadingVideo = () => {
@@ -263,6 +254,7 @@ const VideoDownloadProvider = (props) => {
     <VideoDownloaderContext.Provider
       value={{
         myIDB,
+        isFfmpegLoaded,
         downloaders,
         onDownload,
         onPause,

@@ -10,22 +10,22 @@
 }
 .video-container {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  max-width: 1025px;
+  flex-wrap: wrap;
   margin: 0 auto;
-  padding: 25px;
 }
 video {
   width: 500px;
-  max-width: 50%;
-  margin: 0 10px;
 }
 .video-box {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  flex-direction: column;
+  padding: 10px 20px;
+  max-width: 100vw;
+  p {
+    font-weight: 600;
+  }
 }
 .btn {
   display: flex;
@@ -46,6 +46,12 @@ video {
     &:hover {
       background-color: #2980b9;
       border-color: #2980b9;
+    }
+    &:disabled {
+      background-color: #95a5a6;
+      color: #ecf0f1;
+      border-color: #95a5a6;
+      opacity: 0.5;
     }
   }
   .icon {
