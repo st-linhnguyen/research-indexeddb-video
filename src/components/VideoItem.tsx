@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useVideoDownloader } from '../shared/contexts/video-downloader.context';
 import Hls from 'hls.js';
+import { useVideoDownloader } from '../shared/contexts/video-downloader.context';
+import DOWNLOAD_STATUS from '../shared/constants/download-status';
 
 const VideoItem = ({ data }) => {
   const originalVideo = useRef<any>(null);
@@ -24,10 +25,14 @@ const VideoItem = ({ data }) => {
   }, [myIDB]);
 
   useEffect(() => {
-    if (downloaders[data.id]?.downloadState === 'finished') {
+    if (downloaders?.[data.id]?.downloadState === DOWNLOAD_STATUS.FINISHED) {
+      console.log(123123, downloaders);
       // Load video at offline mode
+      const blob = new Blob([downloaders?.[data.id]?.data], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      setVideoUrl(url);
     }
-  }, downloaders[data.id]);
+  }, [downloaders]);
 
   const getLocalData = async () => {
     const result = await getVideoFromIDB(data?.id);

@@ -11,7 +11,7 @@ export interface VideoDownloader {
 export const VideoDownloaderContext = createContext({
   myIDB: indexedDB,
   isFfmpegLoaded: Boolean,
-  downloaders: [],
+  downloaders: Object,
   onDownload: (data) => data,
   onPause: (id) => id,
   onResume: (id) => id,
