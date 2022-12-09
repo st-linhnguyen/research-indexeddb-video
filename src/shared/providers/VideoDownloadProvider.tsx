@@ -2,6 +2,8 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { openDB } from 'idb';
 import { createFFmpeg } from '@ffmpeg/ffmpeg';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { Parser } from 'm3u8-parser';
 
 import {
@@ -12,10 +14,16 @@ import {
 } from '../services/common.service';
 import { VideoDownloaderContext } from '../contexts/video-downloader.context';
 
+const ffmpeg = createFFmpeg({
+  corePath: '/ffmpeg_core_dist/ffmpeg-core.js',
+  log: true
+});
+
 const VideoDownloadProvider = (props) => {
   const db = useRef<any>(null);
-  const ffmpeg = useRef<any>(null);
+  // const ffmpeg = useRef<any>(null);
   const downloaders = useRef<any>({});
+  const [myIDB, setMyIDB] = useState();
   // const [downloaders, setDownloaders] = useState({});
 
   useEffect(() => {
@@ -28,17 +36,17 @@ const VideoDownloadProvider = (props) => {
   };
 
   const initFfmpeg = async () => {
-    ffmpeg.current = createFFmpeg({ log: true });
-    await ffmpeg?.current?.load();
+    await ffmpeg?.load();
   };
 
   const createDB = async () => {
     db.current = await openDB('SavedVideos', 1, {
       upgrade(db, oldVersion, newVersion, transaction) {
-        const store = db.createObjectStore('media');
-        store.createIndex('type', 'type');
+        db.createObjectStore('media');
+        // store.createIndex('type', 'type');
       }
     });
+    setMyIDB(db.current);
   };
 
   const updateDowloadState = (
@@ -51,7 +59,9 @@ const VideoDownloadProvider = (props) => {
     } else {
       if (downloaders?.current?.[data.id]) {
         downloaders.current[data.id].dowloadState = downloadStatus;
-        downloaders.current[data.id].lastDownloadedIndex = lastDownloadedIndex;
+        if (lastDownloadedIndex) {
+          downloaders.current[data.id].lastDownloadedIndex = lastDownloadedIndex;
+        }
       } else {
         downloaders.current[data.id] = {
           ...data,
@@ -139,7 +149,7 @@ const VideoDownloadProvider = (props) => {
   };
 
   const onDownload = async (video) => {
-    if (!ffmpeg.current) {
+    if (!ffmpeg) {
       return;
     }
 
@@ -147,8 +157,8 @@ const VideoDownloadProvider = (props) => {
     const targetVideo = downloaders?.current?.[video.id];
     const data = await getAllTS(targetVideo.hlsUrl);
     const tsArr = data.tsArr;
-    ffmpeg?.current?.FS('writeFile', 'index.m3u8', data['index.m3u8']);
-    ffmpeg?.current?.setProgress(({ ratio }) => {
+    ffmpeg?.FS('writeFile', 'index.m3u8', data['index.m3u8']);
+    ffmpeg?.setProgress(({ ratio }) => {
       console.log({ ratio });
     });
     const downLoadResult = {
@@ -156,7 +166,7 @@ const VideoDownloadProvider = (props) => {
       errorItems: [] as any,
       totalItems: tsArr,
     };
-    for (let i = targetVideo?.lastDownloadedIndex + 1; i <= tsArr.length; i++) {
+    for (let i = targetVideo?.lastDownloadedIndex + 1 || 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
       try {
         const response = await fetch(item.path);
@@ -167,7 +177,7 @@ const VideoDownloadProvider = (props) => {
           return;
         } else {
           console.log(`DOWNLOADING ${ i }`);
-          ffmpeg?.current?.FS(
+          ffmpeg?.FS(
             'writeFile',
             item.fileName,
             uint8array,
@@ -186,7 +196,7 @@ const VideoDownloadProvider = (props) => {
     }
 
     updateDowloadState(video, 'finished');
-    await ffmpeg?.current?.run(
+    await ffmpeg?.run(
       '-allowed_extensions',
       'ALL',
       '-i',
@@ -195,8 +205,7 @@ const VideoDownloadProvider = (props) => {
       'copy',
       'output.mp4',
     );
-    const uint8array = ffmpeg?.current?.FS('readFile', 'output.mp4');
-    // console.log({ uint8array });
+    const uint8array = ffmpeg?.FS('readFile', 'output.mp4');
     // setVideoUrl(URL.createObjectURL(new Blob([uint8array.buffer], { type: 'video/mp4' })));
     const savedData = {
       ...video,
@@ -214,8 +223,9 @@ const VideoDownloadProvider = (props) => {
   };
 
   const getVideoFromIDB = async (id: string | number) => {
-    const tx = await db?.current?.transaction('media', 'readonly');
+    const tx = await db?.current?.transaction(['media'], 'readonly');
     const store = tx?.objectStore('media');
+    console.log(1111, store);
     const video = await store?.get(id);
     const blob = new Blob([video?.data], { type: 'video/mp4' });
     return URL.createObjectURL(blob);
@@ -252,6 +262,7 @@ const VideoDownloadProvider = (props) => {
   return (
     <VideoDownloaderContext.Provider
       value={{
+        myIDB,
         downloaders,
         onDownload,
         onPause,

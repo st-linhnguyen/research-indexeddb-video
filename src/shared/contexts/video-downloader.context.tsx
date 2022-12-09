@@ -9,6 +9,7 @@ export interface VideoDownloader {
 }
 
 export const VideoDownloaderContext = createContext({
+  myIDB: indexedDB,
   downloaders: [],
   onDownload: (data) => data,
   onPause: (id) => id,

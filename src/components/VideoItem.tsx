@@ -7,16 +7,19 @@ const VideoItem = ({ data }) => {
   const [videoUrl, setVideoUrl] = useState('');
   const [isDownloadStarted, setDownloadStarted] = useState(false);
   const [paused, setPaused] = useState(false);
-  const { getVideoFromIDB, onDownload }: any = useVideoDownloader();
+  const { myIDB, getDBState, getVideoFromIDB, onDownload }: any = useVideoDownloader();
 
   useEffect(() => {
-    // getLocalData();
-  }, []);
+    if (myIDB) {
+      getLocalData();
+    }
+  }, [myIDB]);
 
   const getLocalData = async () => {
     const result = await getVideoFromIDB(data?.id);
-    setVideoUrl(result);
-    console.log(result);
+    if (result) {
+      setVideoUrl(result);
+    }
   };
 
   const toggleDownload = () => {
