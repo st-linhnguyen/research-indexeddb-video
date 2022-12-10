@@ -70,6 +70,11 @@ const VideoItem = ({ data }) => {
     onDownload(data);
   };
 
+  const onCancel = () => {
+    setDownloadStarted(false);
+    toggleDownloader(data, DOWNLOAD_STATUS.CANCELED);
+  };
+
   return (
     <div className="video-card">
       <div className="video-box">
@@ -90,11 +95,14 @@ const VideoItem = ({ data }) => {
         <>
           {
             isDownloadStarted ?
-              <>
+              <div className="btn-group">
                 <button className="btn btn-toggle-download" onClick={ toggleDownload }>
                   { paused ? 'Resume' : 'Pause' }
                 </button>
-              </> :
+                <button className="btn btn-toggle-download" onClick={ onCancel }>
+                  Cancel
+                </button>
+              </div> :
               <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
                 Download
               </button>

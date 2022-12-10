@@ -173,7 +173,9 @@ const VideoDownloadProvider = (props) => {
           downloadingVideos.current[video.id].lastDownloadedIndex = i;
         }
       } catch (error) {
-        downloadingVideos.current[video.id].lastDownloadedIndex = i;
+        if (downloadingVideos.current[video.id]) {
+          downloadingVideos.current[video.id].lastDownloadedIndex = i;
+        }
         return;
       }
     }
@@ -222,11 +224,6 @@ const VideoDownloadProvider = (props) => {
     // Handle get downloadingData from localStorage
   };
 
-  const onCancel = (video) => {
-    // Handle cancel download video
-    // updateDownloadState(video, 'finished');
-  };
-
   const toggleDownloader = (video, status) => {
     if (downloaders[video.id]) {
       updateDownloadState(video, status);
@@ -241,7 +238,6 @@ const VideoDownloadProvider = (props) => {
         downloaders,
         onDownload,
         toggleDownloader,
-        onCancel,
         getVideoFromIDB,
         getAllVideosFromIDB,
         getDownloadingVideo
