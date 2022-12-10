@@ -157,14 +157,14 @@ const VideoDownloadProvider = (props) => {
     for (let i = downloadingVideos?.current?.[video.id]?.lastDownloadedIndex + 1 || 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
       try {
-        const response = await fetch(item.path);
-        const arrayBuffer = await response.arrayBuffer();
-        const uint8array = new Uint8Array(arrayBuffer);
         if (downloadingVideos?.current?.[video.id]?.status === DOWNLOAD_STATUS.PAUSED) {
           console.log('PAUSED DOWNLOAD');
           return;
         } else {
           console.log(`DOWNLOADING ${ Math.floor(i * 100 / tsArr.length) }%`);
+          const response = await fetch(item.path);
+          const arrayBuffer = await response.arrayBuffer();
+          const uint8array = new Uint8Array(arrayBuffer);
           ffmpeg?.FS(
             'writeFile',
             item.fileName,

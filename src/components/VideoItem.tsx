@@ -86,15 +86,20 @@ const VideoItem = ({ data }) => {
         }
       </div>
       {
-        isDownloadStarted ?
-          <>
-            <button className="btn btn-toggle-download" onClick={ toggleDownload }>
-              { paused ? 'Resume' : 'Pause' }
-            </button>
-          </> :
-          <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
-            Download
-          </button>
+        !videoUrl &&
+        <>
+          {
+            isDownloadStarted ?
+              <>
+                <button className="btn btn-toggle-download" onClick={ toggleDownload }>
+                  { paused ? 'Resume' : 'Pause' }
+                </button>
+              </> :
+              <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
+                Download
+              </button>
+          }
+        </>
       }
     </div>
   );
