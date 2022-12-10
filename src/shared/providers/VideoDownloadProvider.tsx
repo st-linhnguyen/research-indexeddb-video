@@ -21,6 +21,7 @@ const VideoDownloadProvider = (props) => {
   const [downloaders, setDownloaders] = useState({});
   const [myIDB, setMyIDB] = useState();
   const [isFfmpegLoaded, setFfmpegLoaded] = useState(false);
+  const downloadingVideos = useRef({});
 
   useEffect(() => {
     initVideoDownloader();
@@ -45,31 +46,24 @@ const VideoDownloadProvider = (props) => {
     setMyIDB(db.current);
   };
 
-  const updateDownloadState = (
-    data: any,
-    downloadStatus: DownloadType['status'],
-    lastDownloadedIndex?: number
-  ) => {
-    switch (downloadStatus) {
-    case DOWNLOAD_STATUS.CANCELED:
-      delete downloaders[data.id];
-      break;
-    case DOWNLOAD_STATUS.FINISHED:
-      downloaders[data.id] = {
-        ...data,
-        downloadState: downloadStatus
+  const updateDownloadState = (data: any, downloadStatus: DownloadType['status']) => {
+    downloaders[data.id] = {
+      ...data,
+      downloadState: downloadStatus
+    };
+    if ([DOWNLOAD_STATUS.CANCELED, DOWNLOAD_STATUS.FINISHED].includes(downloadStatus)) {
+      delete downloadingVideos.current[data.id];
+      if (downloadStatus === DOWNLOAD_STATUS.CANCELED) {
+        delete downloaders[data.id];
+      }
+    } else {
+      downloadingVideos.current = {
+        ...downloadingVideos?.current,
+        [data.id]: {
+          ...downloadingVideos?.current?.[data.id],
+          status: downloadStatus
+        }
       };
-      break;
-    case DOWNLOAD_STATUS.DOWNLOADING:
-      downloaders[data.id] = {
-        ...data,
-        downloadState: downloadStatus
-      };
-      break;
-    case DOWNLOAD_STATUS.PAUSED:
-      downloaders[data.id].lastDownloadedIndex = lastDownloadedIndex;
-      downloaders[data.id].downloadState = downloadStatus;
-      break;
     }
     setDownloaders({ ...downloaders });
   };
@@ -159,21 +153,14 @@ const VideoDownloadProvider = (props) => {
     const data = await getAllTS(targetVideo.hlsUrl);
     const tsArr = data.tsArr;
     ffmpeg?.FS('writeFile', 'index.m3u8', data['index.m3u8']);
-    ffmpeg?.setProgress(({ ratio }) => {
-      console.log({ ratio });
-    });
-    const downLoadResult = {
-      successItems: [] as any,
-      errorItems: [] as any,
-      totalItems: tsArr,
-    };
-    for (let i = targetVideo?.lastDownloadedIndex + 1 || 1; i <= tsArr.length; i++) {
+
+    for (let i = downloadingVideos?.current?.[video.id]?.lastDownloadedIndex + 1 || 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
       try {
         const response = await fetch(item.path);
         const arrayBuffer = await response.arrayBuffer();
         const uint8array = new Uint8Array(arrayBuffer);
-        if (targetVideo?.downloadState === DOWNLOAD_STATUS.PAUSED) {
+        if (downloadingVideos?.current?.[video.id]?.status === DOWNLOAD_STATUS.PAUSED) {
           console.log('PAUSED DOWNLOAD');
           return;
         } else {
@@ -183,12 +170,10 @@ const VideoDownloadProvider = (props) => {
             item.fileName,
             uint8array,
           );
-          targetVideo.lastDownloadedIndex = i;
-          downLoadResult.successItems.push(item);
+          downloadingVideos.current[video.id].lastDownloadedIndex = i;
         }
       } catch (error) {
-        targetVideo.lastDownloadedIndex = i;
-        downLoadResult.errorItems.push(item);
+        downloadingVideos.current[video.id].lastDownloadedIndex = i;
         return;
       }
     }
@@ -237,19 +222,15 @@ const VideoDownloadProvider = (props) => {
     // Handle get downloadingData from localStorage
   };
 
-  const onCancel = (videoId) => {
+  const onCancel = (video) => {
     // Handle cancel download video
-    // updateDownloadState(videoId, 'finished');
+    // updateDownloadState(video, 'finished');
   };
 
-  const onPause = (videoId) => {
-    // Handle pause download video
-    // updateDownloadState(videoId, 'paused');
-  };
-
-  const onResume = (videoId) => {
-    // Handle pause download video
-    // updateDownloadState(videoId, 'downloading');
+  const toggleDownloader = (video, status) => {
+    if (downloaders[video.id]) {
+      updateDownloadState(video, status);
+    }
   };
 
   return (
@@ -259,8 +240,7 @@ const VideoDownloadProvider = (props) => {
         isFfmpegLoaded,
         downloaders,
         onDownload,
-        onPause,
-        onResume,
+        toggleDownloader,
         onCancel,
         getVideoFromIDB,
         getAllVideosFromIDB,

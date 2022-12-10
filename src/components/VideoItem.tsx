@@ -7,15 +7,15 @@ const VideoItem = ({ data }) => {
   const originalVideo = useRef<any>(null);
   const resultVideo = useRef(null);
   const [videoUrl, setVideoUrl] = useState('');
-  const [originalUrl, setOriginalUrl] = useState('');
   const [isDownloadStarted, setDownloadStarted] = useState(false);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState<boolean>();
   const {
     downloaders,
     myIDB,
     isFfmpegLoaded,
     getVideoFromIDB,
-    onDownload
+    onDownload,
+    toggleDownloader
   }: any = useVideoDownloader();
 
   useEffect(() => {
@@ -33,6 +33,16 @@ const VideoItem = ({ data }) => {
       setVideoUrl(url);
     }
   }, [downloaders]);
+
+  useEffect(() => {
+    if (typeof paused === 'boolean') {
+      if (paused) {
+        toggleDownloader(data, DOWNLOAD_STATUS.PAUSED);
+      } else {
+        onDownload(data);
+      }
+    }
+  }, [paused]);
 
   const getLocalData = async () => {
     const result = await getVideoFromIDB(data?.id);
@@ -71,7 +81,7 @@ const VideoItem = ({ data }) => {
             </> :
             <>
               <p>Original Video</p>
-              <video ref={ originalVideo } src={ originalUrl } controls />
+              <video ref={ originalVideo } controls />
             </>
         }
       </div>
