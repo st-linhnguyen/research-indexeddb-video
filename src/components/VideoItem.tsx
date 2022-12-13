@@ -8,7 +8,6 @@ const VideoItem = ({ data }) => {
   const resultVideo = useRef(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [isDownloadStarted, setDownloadStarted] = useState(false);
-  const [paused, setPaused] = useState<boolean>();
   const {
     downloaders,
     myIDB,
@@ -17,6 +16,7 @@ const VideoItem = ({ data }) => {
     onDownload,
     toggleDownloader
   }: any = useVideoDownloader();
+  const [paused, setPaused] = useState<boolean>(downloaders?.[data.id]?.downloadState);
 
   useEffect(() => {
     if (myIDB) {
@@ -26,26 +26,18 @@ const VideoItem = ({ data }) => {
 
   useEffect(() => {
     if (downloaders?.[data.id]?.downloadState === DOWNLOAD_STATUS.FINISHED) {
-      console.log(123123, downloaders);
       // Load video at offline mode
       const blob = new Blob([downloaders?.[data.id]?.data], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       setVideoUrl(url);
+    } else if (downloaders?.[data.id]?.downloadState) {
+      setDownloadStarted(true);
+      setPaused(downloaders?.[data.id]?.downloadState === DOWNLOAD_STATUS.PAUSED);
     }
   }, [downloaders]);
 
-  useEffect(() => {
-    if (typeof paused === 'boolean') {
-      if (paused) {
-        toggleDownloader(data, DOWNLOAD_STATUS.PAUSED);
-      } else {
-        onDownload(data);
-      }
-    }
-  }, [paused]);
-
   const getLocalData = async () => {
-    const result = await getVideoFromIDB(data?.id);
+    const result = await getVideoFromIDB(data?.id, 'media');
     if (result) {
       const blob = new Blob([result?.data], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
@@ -62,6 +54,11 @@ const VideoItem = ({ data }) => {
   };
 
   const toggleDownload = () => {
+    if (paused) {
+      onDownload(data);
+    } else {
+      toggleDownloader(data, DOWNLOAD_STATUS.PAUSED);
+    }
     setPaused(prev => !prev);
   };
 

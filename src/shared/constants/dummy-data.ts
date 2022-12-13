@@ -13,10 +13,10 @@ const DUMMY_URLS = {
     },
     {
       'id': '2',
-      'hlsUrl': 'https://d2f4esnoce5l6k.cloudfront.net/smil:720eLF5MRmJIBQcs80HWaMfMEDIA202211151139481668487188632AJn5tmp4.smil/playlist.m3u8',
-      'videoName': 'BLACKPINK - ‘Shut Down’ M-V.mp4',
+      'hlsUrl': 'https://d2f4esnoce5l6k.cloudfront.net/smil:720BeOOGsBgNYTkJHXWjcPRMEDIA202212121646401670838400424aMGgomp4.smil/playlist.m3u8',
+      'videoName': 'Kandima Signature Video - 20 seconds.mp4',
       'videoDesc': 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book',
-      'videoThumbnailUrl': 'https://images.dev2.lunativi.com/4/eLF5MRmJIBQcs80HWaMf_MEDIA_20221115-113948_1668487188632_AJn5t.mp4_1668487221834_large?Expires=1670915697&Signature=JStFPwgrKdawk8h86~1l7u3NNvPHrSAuEggr-UaDJzy9Wh8SGWLgbf0Cm2YvFttN-l7K5Ia5EeB~VB5Hb61QFdahg3gipWUFJD7W7ZfBW8815opj-9u6pmZqj80Djshh9YTHmq7J2X-g9KqeHooruPgJ-B9PgURvSNb8fg9C~xsqMnpkyjREiiwelrIIj~t7sK7rWuNFgtULnwIGdbAhEVT72BzCsz1tKMok1nYJm97WFB~pbO57zXmbXmPMNBY-pc0wghOY3ODzmJSv9tamqbDO9wbneahP2pg0c2dBRWQlSIa5cNDhafBnKPugax2iSo1~l~ZsISrw9hzwivYIeQ__&Key-Pair-Id=KOQI970OR8HW2'
+      'videoThumbnailUrl': 'https://images.dev2.lunativi.com/4/BeOOGsBgNYTkJHXWjcPR_MEDIA_20221212-164640_1670838400424_aMGgo.mp4_1670838434108_large?Expires=1671443317&Signature=qVF4hXK3qO6OMi4FozdDUxyQ45-B5k8am9ilnwJi~uEyGMRsINGIk4ejhqu8zwKtTeOWom0MH4pNlOPNADUWx8N-N3mV~f6ScjD8phmlTzkp5IfHazRjb91f8rMJELlNAIchjVFtcMKNBWWoKwpBC1~On7tM1D-jUhYRAlrUxqyGHlT4V1Xw27-9wU6mns6vsH9B5evnY6HDBFVTKyd~7PfW-DIcfeQTeiO8XNVg9HWqpiSgusA3k632nyMfSNqxQoTjcG-8l1yT2WvYseBqU9yE32WfztkT~Nnx-wBZCqeR0tnVfLPZRgF2KnHhimfFL4KHuJjeBN26auU3gEOTug__&Key-Pair-Id=K365448S5O69EO'
     },
     {
       'id': '3',
