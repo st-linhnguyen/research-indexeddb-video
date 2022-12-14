@@ -22,10 +22,15 @@ const VideoDownloadProvider = (props) => {
   const [myIDB, setMyIDB] = useState();
   const [isFfmpegLoaded, setFfmpegLoaded] = useState(false);
   const downloadingVideos = useRef({});
+  const [canBackup, setCanBackup] = useState(null);
 
   useEffect(() => {
     initVideoDownloader();
   }, []);
+
+  useEffect(() => {
+    syncWithLocalStorage();
+  }, [isFfmpegLoaded]);
 
   const initVideoDownloader = async () => {
     await createDB();
@@ -35,7 +40,6 @@ const VideoDownloadProvider = (props) => {
   const initFfmpeg = async () => {
     await ffmpeg?.load();
     setFfmpegLoaded(true);
-    // syncWithLocalStorage();
   };
 
   const createDB = async () => {
@@ -90,17 +94,24 @@ const VideoDownloadProvider = (props) => {
     await transaction.done;
   };
 
-  const syncWithLocalStorage = () => {
-    const localData = localStorage.getItem('downloading');
-    if (localData) {
-      const videos = JSON.parse(localData);
-      setDownloaders({ ...videos });
-      Object.keys(videos).map(id => {
-        downloadingVideos.current[id] = {
-          lastDownloadedIndex: videos[id].lastDownloadedIndex,
-          downloadState: videos[id].downloadState
+  const syncWithLocalStorage = async () => {
+    const videos = await getAllVideosFromIDB('downloading');
+    if (videos?.length) {
+      videos.forEach(item => {
+        downloadingVideos.current[item.id] = {
+          downloadState: item.downloadState,
+          lastDownloadedIndex: item.lastDownloadedIndex,
+          downloadedData: item.downloadedData
         };
+        downloaders[item.id] = { ...item };
+        delete downloaders[item.id].lastDownloadedIndex;
+        delete downloaders[item.id].downloadedData;
+        console.log(item);
+        if (item.downloadState === DOWNLOAD_STATUS.DOWNLOADING) {
+          onDownload(item);
+        }
       });
+      setDownloaders({ ...downloaders });
     }
   };
 
@@ -164,9 +175,8 @@ const VideoDownloadProvider = (props) => {
     const data = await getAllTS(targetVideo.hlsUrl);
     const tsArr = data.tsArr;
     ffmpeg?.FS('writeFile', `index-${video?.id}.m3u8`, data['index.m3u8']);
-    const lastDownloadIndex = downloadingVideos?.current?.[video.id]?.lastDownloadedIndex;
 
-    for (let i = lastDownloadIndex + 1 || 1; i <= tsArr.length; i++) {
+    for (let i = 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
       try {
         if (downloadingVideos?.current?.[video.id]?.downloadState === DOWNLOAD_STATUS.PAUSED) {
@@ -174,8 +184,7 @@ const VideoDownloadProvider = (props) => {
           updateDownloadingData(video.id, 'update', 'downloading');
           return;
         } else {
-          console.log(`DOWNLOADING ${ Math.floor(i * 100 / tsArr.length) }%`);
-          const downloadedData = { ...downloadingVideos.current[video.id].downloadedData };
+          const downloadedData = downloadingVideos.current[video.id].downloadedData;
           if (downloadedData?.[i]) {
             ffmpeg?.FS(
               'writeFile',
@@ -199,6 +208,8 @@ const VideoDownloadProvider = (props) => {
                 [i]: uint8array
               };
             }
+            console.log(`DOWNLOADING ${ Math.floor(i * 100 / tsArr.length) }%`);
+            updateDownloadingData(video.id, 'update', 'downloading');
           }
         }
       } catch (error) {
@@ -226,7 +237,6 @@ const VideoDownloadProvider = (props) => {
     };
     updateDownloadState(savedData, DOWNLOAD_STATUS.FINISHED as DownloadType['status']);
     await saveToIDB(savedData, 'media');
-    // updateDownloadingState({ hlsUrl: DUMMY_URLS.HLS_URL }, true);
   };
 
   const saveToIDB = async (data, storeName: string) => {
@@ -245,7 +255,7 @@ const VideoDownloadProvider = (props) => {
 
   const getAllVideosFromIDB = async (storeName: string) => {
     const tx = await db?.current?.transaction(storeName, 'readonly');
-    const store = tx?.objectStore('media');
+    const store = tx?.objectStore(storeName);
     const videos = await store?.getAll();
     return videos;
   };
