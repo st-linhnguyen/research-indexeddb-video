@@ -100,7 +100,7 @@ const VideoItem = ({ data }) => {
                 <>
                   <div className="downloader-progress-bar">
                     <p className="downloader-percent">
-                      { downloaders?.[data.id]?.progress }%
+                      { downloaders?.[data.id]?.progress || 0 }%
                     </p>
                     <div className="downloader-box">
                       <div className="downloader-progress" style={{ width: `${ downloaders?.[data.id]?.progress }%` }} />

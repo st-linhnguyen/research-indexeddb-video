@@ -80,6 +80,7 @@ video {
   flex-direction: column;
   margin-bottom: 20px;
   padding: 0 20px;
+  width: calc(100% - 40px);
   .downloader-percent {
     color: #0984e3;
     text-align: center;
