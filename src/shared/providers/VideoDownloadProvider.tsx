@@ -86,6 +86,12 @@ const VideoDownloadProvider = (props) => {
       ...downloaders[id],
       ...downloadingVideos.current[id]
     };
+    if (downloaders[id]) {
+      setDownloaders(prev => {
+        prev[id].progress = backupData.progress || 0;
+        return { ...prev };
+      });
+    }
     if (action === 'delete') {
       await store.delete(id);
     } else {
@@ -180,7 +186,7 @@ const VideoDownloadProvider = (props) => {
       try {
         if (downloadingVideos?.current?.[video.id]?.downloadState === DOWNLOAD_STATUS.PAUSED) {
           console.log('PAUSED DOWNLOAD');
-          updateDownloadingData(video.id, 'update', 'downloading');
+          // updateDownloadingData(video.id, 'update', 'downloading');
           return;
         } else {
           const downloadedData = downloadingVideos.current[video.id].downloadedData;
@@ -207,8 +213,10 @@ const VideoDownloadProvider = (props) => {
                 [i]: uint8array
               };
             }
-            console.log(`DOWNLOADING ${ Math.floor(i * 100 / tsArr.length) }%`);
+            const downloadedPercent = Math.floor(i * 100 / tsArr.length);
+            downloadingVideos.current[video.id].progress = downloadedPercent;
             updateDownloadingData(video.id, 'update', 'downloading');
+            console.log(`DOWNLOADING VIDEO ${video.id}: ${ downloadedPercent }%`);
           }
         }
       } catch (error) {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import { AiOutlineDownload, AiFillCheckCircle } from 'react-icons/ai';
 import { useVideoDownloader } from '../shared/contexts/video-downloader.context';
 import DOWNLOAD_STATUS from '../shared/constants/download-status';
 
@@ -88,31 +89,38 @@ const VideoItem = ({ data }) => {
         }
       </div>
       {
-        !videoUrl &&
-        <>
-          {
-            isDownloadStarted ?
-              <>
-                <div className="downloader-progress-bar">
-                  <p className="downloader-percent">10%</p>
-                  <div className="downloader-box">
-                    <div className="downloader-progress" style={{ width: '40%' }} />
+        videoUrl ?
+          <div className="downloaded-success">
+            <AiFillCheckCircle className="icon" />
+            <span>Downloaded</span>
+          </div> :
+          <>
+            {
+              isDownloadStarted ?
+                <>
+                  <div className="downloader-progress-bar">
+                    <p className="downloader-percent">
+                      { downloaders?.[data.id]?.progress }%
+                    </p>
+                    <div className="downloader-box">
+                      <div className="downloader-progress" style={{ width: `${ downloaders?.[data.id]?.progress }%` }} />
+                    </div>
                   </div>
-                </div>
-                <div className="btn-group">
-                  <button className="btn btn-toggle-download" onClick={ toggleDownload }>
-                    { paused ? 'Resume' : 'Pause' }
-                  </button>
-                  <button className="btn btn-toggle-download" onClick={ onCancel }>
-                    Cancel
-                  </button>
-                </div>
-              </> :
-              <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
-                Download
-              </button>
-          }
-        </>
+                  <div className="btn-group">
+                    <button className="btn btn-toggle-download" onClick={ toggleDownload }>
+                      { paused ? 'Resume' : 'Pause' }
+                    </button>
+                    <button className="btn btn-toggle-download" onClick={ onCancel }>
+                      Cancel
+                    </button>
+                  </div>
+                </> :
+                <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
+                  <AiOutlineDownload className="icon" />
+                  <span>Download</span>
+                </button>
+            }
+          </>
       }
     </div>
   );
