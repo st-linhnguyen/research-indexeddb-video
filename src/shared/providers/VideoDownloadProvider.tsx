@@ -87,7 +87,7 @@ const VideoDownloadProvider = (props) => {
       ...downloadingVideos.current[id]
     };
     if (action === 'delete') {
-      await store.delete(backupData.id);
+      await store.delete(id);
     } else {
       await store.put(backupData, backupData.id);
     }
