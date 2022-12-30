@@ -106,7 +106,6 @@ const VideoDownloadProvider = (props) => {
         downloaders[item.id] = { ...item };
         delete downloaders[item.id].lastDownloadedIndex;
         delete downloaders[item.id].downloadedData;
-        console.log(item);
         if (item.downloadState === DOWNLOAD_STATUS.DOWNLOADING) {
           onDownload(item);
         }

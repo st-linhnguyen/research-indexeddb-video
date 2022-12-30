@@ -34,7 +34,7 @@ const VideoItem = ({ data }) => {
       setDownloadStarted(true);
       setPaused(downloaders?.[data.id]?.downloadState === DOWNLOAD_STATUS.PAUSED);
     }
-  }, [downloaders]);
+  }, [downloaders?.[data.id]]);
 
   const getLocalData = async () => {
     const result = await getVideoFromIDB(data?.id, 'media');
@@ -92,14 +92,22 @@ const VideoItem = ({ data }) => {
         <>
           {
             isDownloadStarted ?
-              <div className="btn-group">
-                <button className="btn btn-toggle-download" onClick={ toggleDownload }>
-                  { paused ? 'Resume' : 'Pause' }
-                </button>
-                <button className="btn btn-toggle-download" onClick={ onCancel }>
-                  Cancel
-                </button>
-              </div> :
+              <>
+                <div className="downloader-progress-bar">
+                  <p className="downloader-percent">10%</p>
+                  <div className="downloader-box">
+                    <div className="downloader-progress" style={{ width: '40%' }} />
+                  </div>
+                </div>
+                <div className="btn-group">
+                  <button className="btn btn-toggle-download" onClick={ toggleDownload }>
+                    { paused ? 'Resume' : 'Pause' }
+                  </button>
+                  <button className="btn btn-toggle-download" onClick={ onCancel }>
+                    Cancel
+                  </button>
+                </div>
+              </> :
               <button className="btn btn-download" disabled={ !isFfmpegLoaded } onClick={ handleDownload }>
                 Download
               </button>
