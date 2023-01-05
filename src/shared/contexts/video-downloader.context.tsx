@@ -15,8 +15,7 @@ export const VideoDownloaderContext = createContext({
   onDownload: (data) => data,
   toggleDownloader: (video, status) => true,
   getVideoFromIDB: (id) => id,
-  getAllVideosFromIDB: () => true,
-  getDownloadingVideo: (id) => id
+  getAllVideosFromIDB: () => true
 });
 
 export const useVideoDownloader = () => {

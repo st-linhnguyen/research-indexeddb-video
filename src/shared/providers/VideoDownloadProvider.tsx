@@ -22,7 +22,6 @@ const VideoDownloadProvider = (props) => {
   const [myIDB, setMyIDB] = useState();
   const [isFfmpegLoaded, setFfmpegLoaded] = useState(false);
   const downloadingVideos = useRef({});
-  const [canBackup, setCanBackup] = useState(null);
 
   useEffect(() => {
     initVideoDownloader();
@@ -186,7 +185,6 @@ const VideoDownloadProvider = (props) => {
       try {
         if (downloadingVideos?.current?.[video.id]?.downloadState === DOWNLOAD_STATUS.PAUSED) {
           console.log('PAUSED DOWNLOAD');
-          // updateDownloadingData(video.id, 'update', 'downloading');
           return;
         } else {
           const downloadedData = downloadingVideos.current[video.id].downloadedData;
@@ -267,10 +265,6 @@ const VideoDownloadProvider = (props) => {
     return videos;
   };
 
-  const getDownloadingVideo = () => {
-    // Handle get downloadingData from localStorage
-  };
-
   const toggleDownloader = (video, status) => {
     if (downloaders[video.id]) {
       updateDownloadState(video, status);
@@ -286,8 +280,7 @@ const VideoDownloadProvider = (props) => {
         onDownload,
         toggleDownloader,
         getVideoFromIDB,
-        getAllVideosFromIDB,
-        getDownloadingVideo
+        getAllVideosFromIDB
       }}
       { ...props }
     >
