@@ -119,7 +119,7 @@ const VideoDownloadProvider = (props) => {
     }
   };
 
-  const getAllTS = async (url: string) => {
+  const getAllTS = async (id, url: string) => {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     const uint8array = new Uint8Array(arrayBuffer);
@@ -135,7 +135,7 @@ const VideoDownloadProvider = (props) => {
     if (playlists?.length) {
       const playList = playlists[0];
       const fullUrl = getFullUrl(prefixUrl, playList.uri);
-      const tsRes = await getAllTS(fullUrl);
+      const tsRes = await getAllTS(id, fullUrl);
       return tsRes;
     }
     if (segments?.length) {
@@ -144,8 +144,8 @@ const VideoDownloadProvider = (props) => {
       for (const item of segments) {
         const obj = {
           name: item.uri,
-          fileName: getFileName(item.uri),
-          path: getFullUrl(prefixUrl, item.uri),
+          fileName: getFileName(`${id}_${item.uri}`),
+          path: getFullUrl(prefixUrl, `${id}_${item.uri}`),
         };
         if (!key && item.key) {
           key = item.key;
@@ -157,9 +157,9 @@ const VideoDownloadProvider = (props) => {
         results.push({
           name: 'key.key',
           fileName: 'key.key',
-          path: getFullUrl(prefixUrl, key.uri),
+          path: getFullUrl(prefixUrl, `${id}_${key.uri}`),
         });
-        copyMediaList = copyMediaList.replace(key.uri, 'key.key');
+        copyMediaList = copyMediaList.replace(`${id}_${key.uri}`, 'key.key');
       }
       return {
         tsArr: results,
@@ -176,7 +176,7 @@ const VideoDownloadProvider = (props) => {
 
     updateDownloadState(video, DOWNLOAD_STATUS.DOWNLOADING as DownloadType['status']);
     const targetVideo = downloaders?.[video.id];
-    const data = await getAllTS(targetVideo.hlsUrl);
+    const data = await getAllTS(video.id, targetVideo.hlsUrl);
     const tsArr = data.tsArr;
     ffmpeg?.FS(
       'writeFile',
