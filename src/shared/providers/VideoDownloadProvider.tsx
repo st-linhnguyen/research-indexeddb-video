@@ -178,7 +178,11 @@ const VideoDownloadProvider = (props) => {
     const targetVideo = downloaders?.[video.id];
     const data = await getAllTS(targetVideo.hlsUrl);
     const tsArr = data.tsArr;
-    ffmpeg?.FS('writeFile', `index-${video?.id}.m3u8`, data['index.m3u8']);
+    ffmpeg?.FS(
+      'writeFile',
+      `index-${video?.id}.m3u8`,
+      data['index.m3u8']
+    );
 
     for (let i = 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
@@ -219,7 +223,7 @@ const VideoDownloadProvider = (props) => {
         }
       } catch (error) {
         console.log(error);
-        if (downloadingVideos.current[video.id]) {
+        if (downloadingVideos?.current?.[video.id]) {
           downloadingVideos.current[video.id].lastDownloadedIndex = i;
         }
         return;
