@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { openDB, DBSchema } from 'idb';
-import { createFFmpeg } from '@ffmpeg/ffmpeg';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { Parser } from 'm3u8-parser';
+import { toBlobURL, fetchFile } from '@ffmpeg/util';
 
 import {
   getFileName,
@@ -14,18 +15,19 @@ import { VideoDownloaderContext } from '../contexts/video-downloader.context';
 import DOWNLOAD_STATUS from '../constants/download-status';
 import { DownloadType } from '../types/download-status';
 
-const ffmpeg = createFFmpeg({ log: true });
-
 const VideoDownloadProvider = (props) => {
   const db = useRef<any>(null);
+  const ffmpeg = useRef(new FFmpeg());
   const [downloaders, setDownloaders] = useState({});
   const [myIDB, setMyIDB] = useState();
   const [isFfmpegLoaded, setFfmpegLoaded] = useState(false);
   const downloadingVideos = useRef({});
 
   useEffect(() => {
-    initVideoDownloader();
-  }, []);
+    if (ffmpeg.current) {
+      initVideoDownloader();
+    }
+  }, [ffmpeg.current]);
 
   useEffect(() => {
     syncWithLocalStorage();
@@ -37,7 +39,21 @@ const VideoDownloadProvider = (props) => {
   };
 
   const initFfmpeg = async () => {
-    await ffmpeg?.load();
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.1/dist/umd';
+    ffmpeg.current.on('log', ({ message }) => {
+      console.log(message);
+    });
+    console.log(123123, ffmpeg);
+    await ffmpeg.current?.load({
+      coreURL: await toBlobURL(
+        `${baseURL}/ffmpeg-core.js`,
+        'text/javascript'
+      ),
+      wasmURL: await toBlobURL(
+        `${baseURL}/ffmpeg-core.wasm`,
+        'application/wasm'
+      )
+    }).then(res => console.log('LOADED'));
     setFfmpegLoaded(true);
   };
 
@@ -178,11 +194,7 @@ const VideoDownloadProvider = (props) => {
     const targetVideo = downloaders?.[video.id];
     const data = await getAllTS(video.id, targetVideo.hlsUrl);
     const tsArr = data.tsArr;
-    ffmpeg?.FS(
-      'writeFile',
-      `index-${video?.id}.m3u8`,
-      data['index.m3u8']
-    );
+    ffmpeg.current.writeFile(`index-${video?.id}.m3u8`, data['index.m3u8']);
 
     for (let i = 1; i <= tsArr.length; i++) {
       const item = tsArr[i-1];
@@ -193,8 +205,8 @@ const VideoDownloadProvider = (props) => {
         } else {
           const downloadedData = downloadingVideos.current[video.id].downloadedData;
           if (downloadedData?.[i]) {
-            ffmpeg?.FS(
-              'writeFile',
+            ffmpeg.current?.writeFile(
+              // 'writeFile',
               item.fileName,
               downloadedData[i],
             );
@@ -202,8 +214,8 @@ const VideoDownloadProvider = (props) => {
             const response = await fetch(item.path);
             const arrayBuffer = await response.arrayBuffer();
             const uint8array = new Uint8Array(arrayBuffer);
-            ffmpeg?.FS(
-              'writeFile',
+            ffmpeg.current?.writeFile(
+              // 'writeFile',
               item.fileName,
               uint8array,
             );
@@ -230,7 +242,7 @@ const VideoDownloadProvider = (props) => {
       }
     }
 
-    await ffmpeg?.run(
+    await ffmpeg.current?.exec([
       '-allowed_extensions',
       'ALL',
       '-i',
@@ -238,8 +250,8 @@ const VideoDownloadProvider = (props) => {
       '-c',
       'copy',
       `output-${video.id}.mp4`,
-    );
-    const uint8array = ffmpeg?.FS('readFile', `output-${video.id}.mp4`);
+    ]);
+    const uint8array = ffmpeg.current?.readFile(`output-${video.id}.mp4`);
     const savedData = {
       ...video,
       data: uint8array
@@ -289,6 +301,7 @@ const VideoDownloadProvider = (props) => {
       { ...props }
     >
       { props.children }
+      <button onClick={ initVideoDownloader }>Load ffmpeg</button>
       <Suspense fallback={<></>} />
     </VideoDownloaderContext.Provider>
   );
